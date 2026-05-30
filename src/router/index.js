@@ -114,12 +114,6 @@ export const dynamicRoutes = [
         meta: { title: '分组管理' }
       },
       {
-        path: 'favorite',
-        component: () => import('@/views/stock/favorite/index'),
-        name: 'StockFavorite',
-        meta: { title: '自选股管理' }
-      },
-      {
         path: 'kline',
         component: () => import('@/views/stock/kline/index'),
         name: 'StockKline',

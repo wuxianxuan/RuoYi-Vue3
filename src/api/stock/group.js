@@ -51,3 +51,38 @@ export function delGroup(id) {
     method: 'delete'
   })
 }
+
+// 获取分组下的股票列表
+export function getGroupStocks(id) {
+  return request({
+    url: '/stock/group/' + id + '/stocks',
+    method: 'get'
+  })
+}
+
+// 批量添加股票到分组
+export function addGroupStocks(groupId, stockIds) {
+  return request({
+    url: '/stock/group/' + groupId + '/stocks',
+    method: 'post',
+    data: stockIds
+  })
+}
+
+// 从分组移除股票
+export function delGroupStocks(groupId, stockIds) {
+  return request({
+    url: '/stock/group/' + groupId + '/stocks',
+    method: 'delete',
+    data: stockIds
+  })
+}
+
+// 查询不在该分组的股票（用于新增弹窗）
+export function listExcludeStocks(groupId, query) {
+  return request({
+    url: '/stock/group/' + groupId + '/stocks/exclude',
+    method: 'get',
+    params: query
+  })
+}

@@ -42,3 +42,20 @@ export function delStock(id) {
     method: 'delete'
   })
 }
+
+// 获取股票所属分组
+export function getStockGroups(id) {
+  return request({
+    url: '/stock/base/' + id + '/groups',
+    method: 'get'
+  })
+}
+
+// 关联股票到分组
+export function bindStockGroups(id, groupIds) {
+  return request({
+    url: '/stock/base/' + id + '/groups',
+    method: 'post',
+    data: groupIds
+  })
+}

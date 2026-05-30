@@ -95,6 +95,39 @@ export const constantRoutes = [
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
   {
+    path: '/stock',
+    component: Layout,
+    redirect: '/stock/base',
+    name: 'Stock',
+    meta: { title: '股票管理', icon: 'chart' },
+    children: [
+      {
+        path: 'base',
+        component: () => import('@/views/stock/base/index'),
+        name: 'StockBase',
+        meta: { title: '股票基础' }
+      },
+      {
+        path: 'group',
+        component: () => import('@/views/stock/group/index'),
+        name: 'StockGroup',
+        meta: { title: '分组管理' }
+      },
+      {
+        path: 'favorite',
+        component: () => import('@/views/stock/favorite/index'),
+        name: 'StockFavorite',
+        meta: { title: '自选股管理' }
+      },
+      {
+        path: 'kline',
+        component: () => import('@/views/stock/kline/index'),
+        name: 'StockKline',
+        meta: { title: 'K线查询' }
+      }
+    ]
+  },
+  {
     path: '/system/user-auth',
     component: Layout,
     hidden: true,

@@ -108,6 +108,13 @@ export function filterDynamicRoutes(routes) {
       if (auth.hasRoleOr(route.roles)) {
         res.push(route)
       }
+    } else if (route.children && route.children.length) {
+      // 无权限配置但包含子路由，递归过滤子路由
+      const filteredChildren = filterDynamicRoutes(route.children)
+      if (filteredChildren.length > 0) {
+        route = { ...route, children: filteredChildren }
+        res.push(route)
+      }
     }
   })
   return res

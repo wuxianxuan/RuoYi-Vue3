@@ -2,24 +2,21 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" label-width="68px">
       <el-form-item label="股票代码" prop="stockCode">
-        <el-input v-model="queryParams.stockCode" placeholder="如 600519" clearable style="width:140px"/>
-      </el-form-item>
-      <el-form-item label="市场" prop="market">
-        <el-select v-model="queryParams.market" placeholder="市场" clearable style="width:100px">
-          <el-option label="深市" value="0" />
-          <el-option label="沪市" value="1" />
-        </el-select>
+        <el-autocomplete
+          v-model="stockDisplay"
+          :fetch-suggestions="fetchStockSuggestions"
+          placeholder="请输入股票代码"
+          clearable
+          style="width:220px"
+          @select="handleStockSelect"
+          @clear="handleStockClear"
+        />
       </el-form-item>
       <el-form-item label="周期" prop="klineType">
-        <el-select v-model="queryParams.klineType" placeholder="请选择周期" style="width:120px">
+        <el-select v-model="queryParams.klineType" placeholder="请选择周期" style="width:100px">
           <el-option label="日K" value="D" />
           <el-option label="周K" value="W" />
           <el-option label="月K" value="M" />
-          <el-option label="1分钟" value="1" />
-          <el-option label="5分钟" value="5" />
-          <el-option label="15分钟" value="15" />
-          <el-option label="30分钟" value="30" />
-          <el-option label="60分钟" value="60" />
         </el-select>
       </el-form-item>
       <el-form-item label="日期范围">
@@ -52,26 +49,84 @@
 
 <script>
 import * as echarts from 'echarts'
-import { queryKline } from "@/api/stock/kline"
+import { queryKline, autocompleteStock } from "@/api/stock/kline"
 
 export default {
   name: "StockKline",
   data() {
+    // 默认日期范围：当前往前60天
+    const today = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - 60)
+    const fmt = d => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return y + '-' + m + '-' + day
+    }
     return {
-      queryParams: { stockCode: undefined, market: undefined, klineType: 'D' },
-      dateRange: [],
+      stockDisplay: '',              // autocomplete 显示值
+      selectedStockCode: '',         // 用户选中后的股票代码（用于查询）
+      selectedStockName: '',         // 用户选中后的股票名称
+      queryParams: { stockCode: undefined, klineType: 'D' },
+      dateRange: [fmt(start), fmt(today)],
       klineData: [],
       chart: null
     }
   },
+  mounted() {
+    // 组件挂载时无需额外操作，图表在查询后渲染
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.handleResize)
+    if (this.chart) {
+      this.chart.dispose()
+      this.chart = null
+    }
+  },
   methods: {
+    /** 股票代码输入联想 */
+    fetchStockSuggestions(queryString, callback) {
+      if (!queryString || queryString.trim() === '') {
+        callback([])
+        return
+      }
+      autocompleteStock(queryString.trim()).then(response => {
+        const list = response.data || []
+        const suggestions = list.map(item => ({
+          value: item.stockCode + ' ' + item.stockName,
+          stockCode: item.stockCode,
+          stockName: item.stockName,
+          market: item.market
+        }))
+        callback(suggestions)
+      }).catch(() => {
+        callback([])
+      })
+    },
+    /** 选中联想项：显示"代码 名称"，避免选错 */
+    handleStockSelect(item) {
+      this.selectedStockCode = item.stockCode
+      this.selectedStockName = item.stockName
+      this.stockDisplay = item.stockCode + ' ' + item.stockName
+    },
+    /** 清空已选股票 */
+    handleStockClear() {
+      this.selectedStockCode = ''
+      this.selectedStockName = ''
+      this.stockDisplay = ''
+    },
     handleQuery() {
+      // 必须从下拉列表中选择股票代码
+      if (!this.selectedStockCode) {
+        this.$message.warning('请从下拉列表中选取股票代码')
+        return
+      }
       this.queryKlineData()
     },
     queryKlineData() {
       const params = {
-        stockCode: this.queryParams.stockCode,
-        market: this.queryParams.market,
+        stockCode: this.selectedStockCode,
         klineType: this.queryParams.klineType
       }
       if (this.dateRange && this.dateRange.length === 2) {
@@ -83,10 +138,16 @@ export default {
         this.$nextTick(() => { this.renderChart() })
       })
     },
+    handleResize() {
+      if (this.chart) {
+        this.chart.resize()
+      }
+    },
     renderChart() {
       if (!this.$refs.chart) return
       if (!this.chart) {
         this.chart = echarts.init(this.$refs.chart)
+        window.addEventListener('resize', this.handleResize)
       }
       const data = this.klineData
       const dates = data.map(d => d.tradeTime)
@@ -121,6 +182,8 @@ export default {
             data: values,
             xAxisIndex: 0,
             yAxisIndex: 0,
+            barMaxWidth: 30,
+            barMinWidth: 4,
             itemStyle: { color: '#ef232a', color0: '#14b143', borderColor: '#ef232a', borderColor0: '#14b143' }
           },
           {

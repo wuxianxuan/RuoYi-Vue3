@@ -122,8 +122,9 @@
         <el-table-column label="股票名称" align="center" prop="stockName" width="150" />
         <el-table-column label="市场" align="center" prop="market" width="120" />
         <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="100">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="160">
           <template #default="scope">
+            <el-button link type="primary" icon="TrendCharts" @click="handleGoKline(scope.row)">K线</el-button>
             <el-button link type="danger" icon="Delete" @click="handleRemoveStock(scope.row)">删除</el-button>
           </template>
         </el-table-column>
@@ -186,7 +187,8 @@ const detailStockList = ref([])
 
 const detailStockQuery = reactive({
   pageNum: 1,
-  pageSize: 10
+  pageSize: 10,
+  groupId: null
 })
 
 const data = reactive({
@@ -362,17 +364,27 @@ function handleStockList(row) {
   currentGroupId.value = row.id
   currentGroupName.value = row.groupName
   detailStockQuery.pageNum = 1
+  detailStockQuery.groupId = row.id
   detailStockOpen.value = true
 }
 
 /** 加载分组下的股票列表 */
 function loadDetailStocks() {
   detailStockLoading.value = true
-  getGroupStocks(currentGroupId.value).then(response => {
-    detailStockList.value = response.data || []
-    detailStockTotal.value = detailStockList.value.length
+  getGroupStocks(detailStockQuery).then(response => {
+    detailStockList.value = response.rows || []
+    detailStockTotal.value = response.total || 0
     detailStockLoading.value = false
   })
+}
+
+/** 在新标签页打开K线查询 */
+function handleGoKline(row) {
+  const route = proxy.$router.resolve({
+    path: '/stock/kline',
+    query: { stockCode: row.stockCode, stockName: row.stockName }
+  })
+  window.open(route.href, '_blank')
 }
 
 /** 移除股票 */

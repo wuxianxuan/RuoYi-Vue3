@@ -52,11 +52,12 @@ export function delGroup(id) {
   })
 }
 
-// 获取分组下的股票列表
-export function getGroupStocks(id) {
+// 获取分组下的股票列表（分页）
+export function getGroupStocks(query) {
   return request({
-    url: '/stock/group/' + id + '/stocks',
-    method: 'get'
+    url: '/stock/group/' + query.groupId + '/stocks',
+    method: 'get',
+    params: query
   })
 }
 

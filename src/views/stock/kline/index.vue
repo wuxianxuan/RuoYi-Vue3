@@ -75,7 +75,20 @@ export default {
     }
   },
   mounted() {
-    // 组件挂载时无需额外操作，图表在查询后渲染
+    // 组件挂载时无需额外操作
+  },
+  watch: {
+    '$route.query': {
+      handler(query) {
+        if (query && query.stockCode) {
+          this.selectedStockCode = query.stockCode
+          this.selectedStockName = query.stockName || ''
+          this.stockDisplay = this.selectedStockCode + (this.selectedStockName ? ' ' + this.selectedStockName : '')
+          this.queryKlineData()
+        }
+      },
+      immediate: true
+    }
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)

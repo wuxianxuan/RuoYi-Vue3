@@ -18,13 +18,31 @@
         />
       </el-form-item>
       <el-form-item label="市场" prop="market">
-        <el-input
-          v-model="queryParams.market"
-          placeholder="请输入市场：SH / SZ / BJ / HK / US"
-          clearable
-          @keyup.enter="handleQuery"
-        />
+        <el-select v-model="queryParams.market" placeholder="请选择市场" clearable>
+          <el-option v-for="m in marketOptions" :key="m.value" :label="m.label" :value="m.value" />
+        </el-select>
       </el-form-item>
+      <el-form-item label="行业" prop="industryId">
+          <el-tree-select
+            v-model="queryParams.industryId"
+            :data="industryTreeData"
+            :props="{ label: 'plateName', value: 'id', children: 'children' }"
+            placeholder="请选择行业"
+            clearable
+            check-strictly
+            :render-after-expand="false"
+          />
+        </el-form-item>
+        <el-form-item label="概念" prop="conceptIds">
+          <el-select v-model="queryParams.conceptIds" multiple placeholder="请选择概念" clearable>
+            <el-option v-for="c in conceptOptions" :key="c.id" :label="c.plateName" :value="c.id" />
+          </el-select>
+        </el-form-item>
+      <el-form-item label="所属分组" prop="groupId">
+          <el-select v-model="queryParams.groupId" placeholder="请选择分组" clearable>
+            <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
+          </el-select>
+        </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -52,10 +70,23 @@
 
     <el-table v-loading="loading" :data="stockList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="股票代码" align="center" prop="stockCode" />
       <el-table-column label="股票名称" align="center" prop="stockName" />
       <el-table-column label="市场" align="center" prop="market" />
+      <el-table-column label="行业" align="center" prop="industryName" :show-overflow-tooltip="true" />
+<el-table-column label="概念" align="center" :show-overflow-tooltip="true" min-width="150">
+          <template #default="scope">
+            <template v-if="scope.row.conceptNames && scope.row.conceptNames.length">
+              <span v-if="scope.row.conceptNames.length <= 2">
+                {{ scope.row.conceptNames.join('、') }}
+              </span>
+              <el-tooltip v-else :content="scope.row.conceptNames.join('、')" placement="top">
+                <span>{{ scope.row.conceptNames.slice(0, 2).join('、') }} ...</span>
+              </el-tooltip>
+            </template>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
       <el-table-column label="所属分组" align="center" prop="groupNames" :show-overflow-tooltip="true">
         <template #default="scope">
           <el-tag v-for="g in scope.row.groupIds" :key="g" size="small" style="margin: 2px">{{ getGroupName(g) }}</el-tag>
@@ -64,6 +95,7 @@
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
+          <el-button link type="primary" icon="TrendCharts" @click="handleGoKline(scope.row)">K线</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -141,6 +173,7 @@
 <script setup name="Stock">
 import { listStock, getStock, delStock, addStock, updateStock, getStockGroups, bindStockGroups } from "@/api/stock/base"
 import { listGroupAll } from "@/api/stock/group"
+import { listIndustryTree, listPlate } from "@/api/stock/plate"
 
 const { proxy } = getCurrentInstance()
 
@@ -155,6 +188,15 @@ const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
 const groupOptions = ref([])
+const industryTreeData = ref([])
+const conceptOptions = ref([])
+const marketOptions = [
+  { label: 'SH', value: 'SH' },
+  { label: 'SZ', value: 'SZ' },
+  { label: 'BJ', value: 'BJ' },
+  { label: 'HK', value: 'HK' },
+  { label: 'US', value: 'US' }
+]
 
 const data = reactive({
   form: {},
@@ -164,6 +206,9 @@ const data = reactive({
     stockCode: undefined,
     stockName: undefined,
     market: undefined,
+    industryId: undefined,
+    conceptIds: [],
+    groupId: undefined,
   },
   rules: {
     stockCode: [
@@ -190,6 +235,20 @@ function getGroupName(groupId) {
 function loadGroups() {
   listGroupAll().then(response => {
     groupOptions.value = response.data
+  })
+}
+
+/** 加载行业树 */
+function loadIndustryTree() {
+  listIndustryTree().then(response => {
+    industryTreeData.value = response.data
+  })
+}
+
+/** 加载概念列表（概念即板块类型为 concept 的数据） */
+function loadConcepts() {
+  listPlate({ plateType: 'concept' }).then(response => {
+    conceptOptions.value = response.rows || response.data || []
   })
 }
 
@@ -236,6 +295,15 @@ function reset() {
 function handleQuery() {
   queryParams.value.pageNum = 1
   getList()
+}
+
+/** 跳转K线页面 */
+function handleGoKline(row) {
+  const route = proxy.$router.resolve({
+    path: '/stock/kline',
+    query: { stockCode: row.stockCode, stockName: row.stockName }
+  })
+  window.open(route.href, '_blank')
 }
 
 /** 重置按钮操作 */
@@ -357,5 +425,7 @@ function handleExport() {
 }
 
 loadGroups()
+loadIndustryTree()
+loadConcepts()
 getList()
 </script>

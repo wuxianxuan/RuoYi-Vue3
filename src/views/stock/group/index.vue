@@ -25,7 +25,6 @@
 
     <el-table v-loading="loading" :data="groupList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" prop="id" width="80" />
       <el-table-column label="分组名称" align="center" prop="groupName" :show-overflow-tooltip="true" />
       <el-table-column label="排序" align="center" prop="sortOrder" width="100" />
       <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
@@ -85,6 +84,23 @@
         <el-form-item label="市场" prop="market">
           <el-input v-model="addStockQuery.market" placeholder="SH/SZ/BJ/HK/US" clearable @keyup.enter="handleAddStockQuery"/>
         </el-form-item>
+        <el-form-item label="行业" prop="industryId">
+          <el-tree-select
+            v-model="addStockQuery.industryId"
+            :data="industryTreeData"
+            :props="{ label: 'plateName', value: 'id', children: 'children' }"
+            placeholder="请选择行业"
+            clearable
+            check-strictly
+            :render-after-expand="false"
+            style="width: 180px"
+          />
+        </el-form-item>
+        <el-form-item label="概念" prop="conceptIds">
+          <el-select v-model="addStockQuery.conceptIds" multiple placeholder="请选择概念" clearable style="width: 200px">
+            <el-option v-for="c in conceptOptions" :key="c.id" :label="c.plateName" :value="c.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="Search" @click="handleAddStockQuery">搜索</el-button>
           <el-button icon="Refresh" @click="resetAddStockQuery">重置</el-button>
@@ -121,7 +137,6 @@
         <el-table-column label="股票代码" align="center" prop="stockCode" width="120" />
         <el-table-column label="股票名称" align="center" prop="stockName" width="150" />
         <el-table-column label="市场" align="center" prop="market" width="120" />
-        <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="160">
           <template #default="scope">
             <el-button link type="primary" icon="TrendCharts" @click="handleGoKline(scope.row)">K线</el-button>
@@ -149,6 +164,7 @@
 
 <script setup name="StockGroup">
 import { listGroup, getGroup, delGroup, addGroup, updateGroup, getGroupStocks, addGroupStocks, delGroupStocks, listExcludeStocks } from "@/api/stock/group"
+import { listIndustryTree, listPlate } from "@/api/stock/plate"
 
 const { proxy } = getCurrentInstance()
 
@@ -176,8 +192,14 @@ const addStockQuery = reactive({
   pageSize: 10,
   stockCode: undefined,
   stockName: undefined,
-  market: undefined
+  market: undefined,
+  industryId: undefined,
+  conceptIds: []
 })
+
+// 行业和概念选项（复用股票基础页的筛选逻辑）
+const industryTreeData = ref([])
+const conceptOptions = ref([])
 
 // 详情列表相关
 const detailStockOpen = ref(false)
@@ -311,6 +333,8 @@ function handleAddStocks(row) {
   addStockQuery.stockCode = undefined
   addStockQuery.stockName = undefined
   addStockQuery.market = undefined
+  addStockQuery.industryId = undefined
+  addStockQuery.conceptIds = []
   addSelectedIds.value = []
   addStockOpen.value = true
 }
@@ -336,6 +360,8 @@ function resetAddStockQuery() {
   addStockQuery.stockCode = undefined
   addStockQuery.stockName = undefined
   addStockQuery.market = undefined
+  addStockQuery.industryId = undefined
+  addStockQuery.conceptIds = []
   handleAddStockQuery()
 }
 
@@ -398,5 +424,21 @@ function handleRemoveStock(row) {
   }).catch(() => {})
 }
 
+/** 加载行业树 */
+function loadIndustryTree() {
+  listIndustryTree().then(response => {
+    industryTreeData.value = response.data
+  })
+}
+
+/** 加载概念列表 */
+function loadConcepts() {
+  listPlate({ plateType: 'concept' }).then(response => {
+    conceptOptions.value = response.rows || response.data || []
+  })
+}
+
+loadIndustryTree()
+loadConcepts()
 getList()
 </script>

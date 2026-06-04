@@ -124,6 +124,12 @@ export const dynamicRoutes = [
         component: () => import('@/views/stock/kline/index'),
         name: 'StockKline',
         meta: { title: 'K线查询' }
+      },
+      {
+        path: 'recommend',
+        component: () => import('@/views/stock/recommend/index'),
+        name: 'StockRecommend',
+        meta: { title: '股票推荐' }
       }
     ]
   },

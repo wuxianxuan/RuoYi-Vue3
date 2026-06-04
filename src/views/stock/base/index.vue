@@ -74,6 +74,40 @@
       <el-table-column label="股票名称" align="center" prop="stockName" />
       <el-table-column label="市场" align="center" prop="market" />
       <el-table-column label="行业" align="center" prop="industryName" :show-overflow-tooltip="true" />
+      <el-table-column label="现价" align="center" prop="currentPrice" width="90">
+        <template #default="scope">
+          {{ scope.row.currentPrice != null ? scope.row.currentPrice : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="涨跌幅" align="center" prop="changeRate" width="90">
+        <template #default="scope">
+          <span v-if="scope.row.changeRate != null"
+                :style="{ color: scope.row.changeRate > 0 ? '#e4393c' : scope.row.changeRate < 0 ? '#1ca01c' : '' }">
+            {{ scope.row.changeRate > 0 ? '+' : '' }}{{ scope.row.changeRate }}%
+          </span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="市盈率(PE)" align="center" prop="peRatio" width="110">
+        <template #default="scope">
+          {{ scope.row.peRatio != null ? scope.row.peRatio : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="总市值" align="center" prop="totalMarketCap" width="130">
+        <template #default="scope">
+          {{ scope.row.totalMarketCap != null ? (scope.row.totalMarketCap / 100000000).toFixed(2) + '亿' : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="换手率" align="center" prop="turnoverRate" width="90">
+        <template #default="scope">
+          {{ scope.row.turnoverRate != null ? scope.row.turnoverRate + '%' : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="量比" align="center" prop="volumeRatio" width="80">
+        <template #default="scope">
+          {{ scope.row.volumeRatio != null ? scope.row.volumeRatio : '-' }}
+        </template>
+      </el-table-column>
 <el-table-column label="概念" align="center" :show-overflow-tooltip="true" min-width="150">
           <template #default="scope">
             <template v-if="scope.row.conceptNames && scope.row.conceptNames.length">
@@ -127,6 +161,36 @@
           <el-col :span="24">
             <el-form-item label="市场" prop="market">
               <el-input v-model="form.market" placeholder="请输入市场：SH / SZ / BJ / HK / US" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="现价" prop="currentPrice">
+              <el-input-number v-model="form.currentPrice" :precision="4" :controls="false" placeholder="现价" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="涨跌幅(%)" prop="changeRate">
+              <el-input-number v-model="form.changeRate" :precision="4" :controls="false" placeholder="涨跌幅" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="市盈率(PE)" prop="peRatio">
+              <el-input-number v-model="form.peRatio" :precision="4" :controls="false" placeholder="市盈率" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="总市值" prop="totalMarketCap">
+              <el-input-number v-model="form.totalMarketCap" :precision="4" :controls="false" placeholder="总市值" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="换手率(%)" prop="turnoverRate">
+              <el-input-number v-model="form.turnoverRate" :precision="4" :controls="false" placeholder="换手率" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="量比" prop="volumeRatio">
+              <el-input-number v-model="form.volumeRatio" :precision="4" :controls="false" placeholder="量比" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -281,6 +345,17 @@ function reset() {
     stockCode: null,
     stockName: null,
     market: null,
+    currentPrice: null,
+    changeRate: null,
+    priceChange: null,
+    peRatio: null,
+    totalMarketCap: null,
+    circMarketCap: null,
+    turnoverRate: null,
+    volumeRatio: null,
+    amplitude: null,
+    turnoverAmount: null,
+    circulatingShares: null,
     groupIds: [],
     createBy: null,
     createTime: null,

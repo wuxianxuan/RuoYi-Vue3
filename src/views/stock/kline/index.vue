@@ -71,7 +71,8 @@ export default {
       queryParams: { stockCode: undefined, klineType: 'D' },
       dateRange: [fmt(start), fmt(today)],
       klineData: [],
-      chart: null
+      chart: null,
+      suggestTimer: null             // autocomplete 防抖计时器
     }
   },
   mounted() {
@@ -98,24 +99,27 @@ export default {
     }
   },
   methods: {
-    /** 股票代码输入联想 */
+    /** 股票代码输入联想（300ms 防抖） */
     fetchStockSuggestions(queryString, callback) {
+      if (this.suggestTimer) clearTimeout(this.suggestTimer)
       if (!queryString || queryString.trim() === '') {
         callback([])
         return
       }
-      autocompleteStock(queryString.trim()).then(response => {
-        const list = response.data || []
-        const suggestions = list.map(item => ({
-          value: item.stockCode + ' ' + item.stockName,
-          stockCode: item.stockCode,
-          stockName: item.stockName,
-          market: item.market
-        }))
-        callback(suggestions)
-      }).catch(() => {
-        callback([])
-      })
+      this.suggestTimer = setTimeout(() => {
+        autocompleteStock(queryString.trim()).then(response => {
+          const list = response.data || []
+          const suggestions = list.map(item => ({
+            value: item.stockCode + ' ' + item.stockName,
+            stockCode: item.stockCode,
+            stockName: item.stockName,
+            market: item.market
+          }))
+          callback(suggestions)
+        }).catch(() => {
+          callback([])
+        })
+      }, 300)
     },
     /** 选中联想项：显示"代码 名称"，避免选错 */
     handleStockSelect(item) {

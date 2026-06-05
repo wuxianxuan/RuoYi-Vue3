@@ -222,6 +222,7 @@
 
 <script setup name="StockPlate">
 import { listPlate, getPlate, addPlate, updatePlate, delPlate, listIndustryTree, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes } from "@/api/stock/plate"
+import { handleTree } from '@/utils/ruoyi'
 
 const { proxy } = getCurrentInstance()
 
@@ -259,7 +260,7 @@ const parsedResult = ref(null)
 function loadIndustryTree() {
   listIndustryTree().then(response => {
     const list = response.data || []
-    industryTreeData.value = buildTree(list)
+    industryTreeData.value = handleTree(list, 'id', 'parentId', 'children')
   })
 }
 
@@ -269,31 +270,6 @@ function loadConceptList() {
   })
 }
 
-function buildTree(list) {
-  const map = {}
-  const roots = []
-  list.forEach(item => {
-    item.children = []
-    map[item.id] = item
-  })
-  list.forEach(item => {
-    if (item.parentId && item.parentId !== 0 && map[item.parentId]) {
-      map[item.parentId].children.push(item)
-    } else {
-      roots.push(item)
-    }
-  })
-  function cleanEmpty(node) {
-    if (node.children && node.children.length === 0) {
-      delete node.children
-    } else if (node.children) {
-      node.children.forEach(cleanEmpty)
-    }
-  }
-  roots.forEach(cleanEmpty)
-  return roots
-}
-
 function loadPlateStocks() {
   if (!currentPlate.value) return
   plateStockLoading.value = true
@@ -301,6 +277,7 @@ function loadPlateStocks() {
   getPlateStocks(plateStockQuery).then(response => {
     plateStockList.value = response.rows || []
     plateStockTotal.value = response.total || 0
+  }).finally(() => {
     plateStockLoading.value = false
   })
 }

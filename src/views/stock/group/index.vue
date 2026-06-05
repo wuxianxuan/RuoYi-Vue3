@@ -164,9 +164,10 @@
 
 <script setup name="StockGroup">
 import { listGroup, getGroup, delGroup, addGroup, updateGroup, getGroupStocks, addGroupStocks, delGroupStocks, listExcludeStocks } from "@/api/stock/group"
-import { listIndustryTree, listPlate } from "@/api/stock/plate"
+import { useStock } from "@/composables/useStock"
 
 const { proxy } = getCurrentInstance()
+const { industryTreeData, conceptOptions, loadFilters, goKline } = useStock()
 
 const loading = ref(true)
 const ids = ref([])
@@ -196,10 +197,6 @@ const addStockQuery = reactive({
   industryId: undefined,
   conceptIds: []
 })
-
-// 行业和概念选项（复用股票基础页的筛选逻辑）
-const industryTreeData = ref([])
-const conceptOptions = ref([])
 
 // 详情列表相关
 const detailStockOpen = ref(false)
@@ -233,6 +230,7 @@ function getList() {
   listGroup(queryParams.value).then(response => {
     groupList.value = response.rows
     total.value = response.total
+  }).finally(() => {
     loading.value = false
   })
 }
@@ -345,6 +343,7 @@ function loadAddStocks() {
   listExcludeStocks(currentGroupId.value, addStockQuery).then(response => {
     addStockList.value = response.rows
     addStockTotal.value = response.total
+  }).finally(() => {
     addStockLoading.value = false
   })
 }
@@ -400,17 +399,14 @@ function loadDetailStocks() {
   getGroupStocks(detailStockQuery).then(response => {
     detailStockList.value = response.rows || []
     detailStockTotal.value = response.total || 0
+  }).finally(() => {
     detailStockLoading.value = false
   })
 }
 
 /** 在新标签页打开K线查询 */
 function handleGoKline(row) {
-  const route = proxy.$router.resolve({
-    path: '/stock/kline',
-    query: { stockCode: row.stockCode, stockName: row.stockName }
-  })
-  window.open(route.href, '_blank')
+  goKline(row)
 }
 
 /** 移除股票 */
@@ -424,21 +420,6 @@ function handleRemoveStock(row) {
   }).catch(() => {})
 }
 
-/** 加载行业树 */
-function loadIndustryTree() {
-  listIndustryTree().then(response => {
-    industryTreeData.value = response.data
-  })
-}
-
-/** 加载概念列表 */
-function loadConcepts() {
-  listPlate({ plateType: 'concept' }).then(response => {
-    conceptOptions.value = response.rows || response.data || []
-  })
-}
-
-loadIndustryTree()
-loadConcepts()
+loadFilters()
 getList()
 </script>

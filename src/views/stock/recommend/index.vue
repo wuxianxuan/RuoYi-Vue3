@@ -39,9 +39,9 @@
       <el-table-column label="推荐理由" align="center" prop="reason" min-width="180" :show-overflow-tooltip="true" />
       <el-table-column label="状态" align="center" prop="status" width="90">
         <template #default="scope">
-          <el-tag v-if="scope.row.status === '0'" type="warning" size="small">待确认</el-tag>
-          <el-tag v-else-if="scope.row.status === '1'" type="success" size="small">已确认</el-tag>
-          <el-tag v-else-if="scope.row.status === '2'" type="info" size="small">已驳回</el-tag>
+          <el-tag v-if="scope.row.status === '0'" type="warning" size="small">{{ RECOMMEND_STATUS_MAP['0'] }}</el-tag>
+          <el-tag v-else-if="scope.row.status === '1'" type="success" size="small">{{ RECOMMEND_STATUS_MAP['1'] }}</el-tag>
+          <el-tag v-else-if="scope.row.status === '2'" type="info" size="small">{{ RECOMMEND_STATUS_MAP['2'] }}</el-tag>
           <span v-else>-</span>
         </template>
       </el-table-column>
@@ -64,9 +64,12 @@
 
 <script setup name="StockRecommend">
 import { listRecommend, executeRecommend } from "@/api/stock/recommend"
+import { useStock } from "@/composables/useStock"
+import { RECOMMEND_STATUS_MAP } from "@/utils/stock/constants"
 import { ref, reactive, toRefs, getCurrentInstance } from "vue"
 
 const { proxy } = getCurrentInstance()
+const { goKline } = useStock()
 
 const recommendList = ref([])
 const loading = ref(true)
@@ -88,6 +91,7 @@ function getList() {
   listRecommend(queryParams.value).then(response => {
     recommendList.value = response.rows || []
     total.value = response.total || 0
+  }).finally(() => {
     loading.value = false
   })
 }
@@ -113,11 +117,7 @@ function handleExecute() {
 }
 
 function handleGoKline(row) {
-  const route = proxy.$router.resolve({
-    path: '/stock/kline',
-    query: { stockCode: row.stockCode, stockName: row.stockName }
-  })
-  window.open(route.href, '_blank')
+  goKline(row)
 }
 
 getList()

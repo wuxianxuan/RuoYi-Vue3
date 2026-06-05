@@ -160,7 +160,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="市场" prop="market">
-              <el-input v-model="form.market" placeholder="请输入市场：SH / SZ / BJ / HK / US" />
+              <el-input v-model="form.market" placeholder="请输入市场：SH（沪市）/ SZ（深市）" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -237,9 +237,10 @@
 <script setup name="Stock">
 import { listStock, getStock, delStock, addStock, updateStock, getStockGroups, bindStockGroups } from "@/api/stock/base"
 import { listGroupAll } from "@/api/stock/group"
-import { listIndustryTree, listPlate } from "@/api/stock/plate"
+import { useStock } from "@/composables/useStock"
 
 const { proxy } = getCurrentInstance()
+const { industryTreeData, conceptOptions, loadFilters, goKline, MARKET_OPTIONS } = useStock()
 
 const stockList = ref([])
 const open = ref(false)
@@ -252,15 +253,7 @@ const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
 const groupOptions = ref([])
-const industryTreeData = ref([])
-const conceptOptions = ref([])
-const marketOptions = [
-  { label: 'SH', value: 'SH' },
-  { label: 'SZ', value: 'SZ' },
-  { label: 'BJ', value: 'BJ' },
-  { label: 'HK', value: 'HK' },
-  { label: 'US', value: 'US' }
-]
+const marketOptions = MARKET_OPTIONS
 
 const data = reactive({
   form: {},
@@ -302,20 +295,6 @@ function loadGroups() {
   })
 }
 
-/** 加载行业树 */
-function loadIndustryTree() {
-  listIndustryTree().then(response => {
-    industryTreeData.value = response.data
-  })
-}
-
-/** 加载概念列表（概念即板块类型为 concept 的数据） */
-function loadConcepts() {
-  listPlate({ plateType: 'concept' }).then(response => {
-    conceptOptions.value = response.rows || response.data || []
-  })
-}
-
 /** 查询股票基础列表 */
 function getList() {
   loading.value = true
@@ -328,6 +307,7 @@ function getList() {
         stock.groupIds = res.data || []
       })
     })
+  }).finally(() => {
     loading.value = false
   })
 }
@@ -374,11 +354,7 @@ function handleQuery() {
 
 /** 跳转K线页面 */
 function handleGoKline(row) {
-  const route = proxy.$router.resolve({
-    path: '/stock/kline',
-    query: { stockCode: row.stockCode, stockName: row.stockName }
-  })
-  window.open(route.href, '_blank')
+  goKline(row)
 }
 
 /** 重置按钮操作 */
@@ -500,7 +476,6 @@ function handleExport() {
 }
 
 loadGroups()
-loadIndustryTree()
-loadConcepts()
+loadFilters()
 getList()
 </script>

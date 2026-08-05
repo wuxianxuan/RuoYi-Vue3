@@ -7,12 +7,6 @@ export const MARKET_OPTIONS = [
   { label: '北证 (BJ)', value: 'BJ' },
 ]
 
-export const RECOMMEND_STATUS_MAP = {
-  '0': '待确认',
-  '1': '已确认',
-  '2': '已驳回',
-}
-
 /**
  * 跳转到K线页面
  */

@@ -26,7 +26,6 @@
     <el-table v-loading="loading" :data="groupList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="分组名称" align="center" prop="groupName" :show-overflow-tooltip="true" />
-      <el-table-column label="排序" align="center" prop="sortOrder" width="100" />
       <el-table-column label="备注" align="center" prop="remark" :show-overflow-tooltip="true" />
       <el-table-column label="创建时间" align="center" prop="createTime" width="180">
         <template #default="scope">

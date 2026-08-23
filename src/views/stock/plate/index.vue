@@ -13,26 +13,30 @@
                   <el-button type="primary" size="small" icon="Plus" @click="handleAddPlate('INDUSTRY')">新增</el-button>
                 </div>
               </template>
-              <el-tree
-                ref="industryTreeRef"
+              <el-table
                 :data="industryTreeData"
-                :props="{ label: 'plateName', children: 'children' }"
-                node-key="id"
-                highlight-current
+                row-key="id"
+                :tree-props="{ children: 'children' }"
                 default-expand-all
-                @node-click="handleIndustryNodeClick"
+                highlight-current-row
+                @row-click="handleIndustryNodeClick"
+                max-height="500"
+                size="small"
               >
-                <template #default="{ node, data }">
-                  <span style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <span>{{ data.plateName }}</span>
-                    <span>
-                      <el-button link type="primary" size="small" icon="Plus" @click.stop="handleAddChild(data)" title="新增子级" />
-                      <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(data)" title="编辑" />
-                      <el-button link type="danger" size="small" icon="Delete" @click.stop="handleDeletePlate(data)" :disabled="data.children && data.children.length > 0" title="删除" />
-                    </span>
-                  </span>
-                </template>
-              </el-tree>
+                <el-table-column label="行业名称" prop="plateName" :show-overflow-tooltip="true" />
+                <el-table-column label="重点关注" width="110" align="center">
+                  <template #default="scope">
+                    <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="110" align="center">
+                  <template #default="scope">
+                    <el-button link type="primary" size="small" icon="Plus" @click.stop="handleAddChild(scope.row)" title="新增子级" />
+                    <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" title="编辑" />
+                    <el-button link type="danger" size="small" icon="Delete" @click.stop="handleDeletePlate(scope.row)" :disabled="scope.row.children && scope.row.children.length > 0" title="删除" />
+                  </template>
+                </el-table-column>
+              </el-table>
             </el-card>
           </el-col>
 
@@ -47,6 +51,9 @@
                 <el-descriptions-item label="板块类型">行业板块</el-descriptions-item>
                 <el-descriptions-item label="层级">{{ currentPlate.level }}</el-descriptions-item>
                 <el-descriptions-item label="排序">{{ currentPlate.sortOrder }}</el-descriptions-item>
+                <el-descriptions-item label="重点关注">
+                  <el-tag :type="currentPlate.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ currentPlate.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
+                </el-descriptions-item>
                 <el-descriptions-item label="备注" :span="2">{{ currentPlate.remark || '-' }}</el-descriptions-item>
               </el-descriptions>
 
@@ -101,7 +108,11 @@
                 size="small"
               >
                 <el-table-column label="概念名称" prop="plateName" :show-overflow-tooltip="true" />
-                <el-table-column label="排序" prop="sortOrder" width="60" align="center" />
+                <el-table-column label="重点关注" width="110" align="center">
+                  <template #default="scope">
+                    <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
+                  </template>
+                </el-table-column>
                 <el-table-column label="操作" width="100" align="center">
                   <template #default="scope">
                     <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" />
@@ -122,6 +133,9 @@
                 <el-descriptions-item label="板块名称">{{ currentPlate.plateName }}</el-descriptions-item>
                 <el-descriptions-item label="板块类型">概念板块</el-descriptions-item>
                 <el-descriptions-item label="排序">{{ currentPlate.sortOrder }}</el-descriptions-item>
+                <el-descriptions-item label="重点关注">
+                  <el-tag :type="currentPlate.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ currentPlate.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
+                </el-descriptions-item>
                 <el-descriptions-item label="备注">{{ currentPlate.remark || '-' }}</el-descriptions-item>
               </el-descriptions>
 
@@ -177,6 +191,12 @@
         <el-form-item label="排序" prop="sortOrder">
           <el-input-number v-model="plateForm.sortOrder" :min="0" controls-position="right" />
         </el-form-item>
+        <el-form-item label="重点关注" prop="focusFlag">
+          <el-radio-group v-model="plateForm.focusFlag">
+            <el-radio :value="1">需要</el-radio>
+            <el-radio :value="0">不需要</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input v-model="plateForm.remark" type="textarea" placeholder="请输入备注" />
         </el-form-item>
@@ -221,7 +241,7 @@
 </template>
 
 <script setup name="StockPlate">
-import { listPlate, getPlate, addPlate, updatePlate, delPlate, listIndustryTree, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes } from "@/api/stock/plate"
+import { getPlate, addPlate, updatePlate, delPlate, listIndustryTree, listConceptList, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes } from "@/api/stock/plate"
 import { handleTree } from '@/utils/ruoyi'
 
 const { proxy } = getCurrentInstance()
@@ -265,8 +285,8 @@ function loadIndustryTree() {
 }
 
 function loadConceptList() {
-  listPlate({ plateType: 'CONCEPT' }).then(response => {
-    conceptList.value = response.rows || []
+  listConceptList().then(response => {
+    conceptList.value = response.data || []
   })
 }
 
@@ -317,6 +337,7 @@ function handleAddPlate(plateType) {
     plateType: plateType,
     parentId: plateType === 'CONCEPT' ? 0 : undefined,
     sortOrder: 0,
+    focusFlag: 0,
     remark: undefined
   }
   plateDialogTitle.value = plateType === 'INDUSTRY' ? '新增行业板块' : '新增概念板块'
@@ -330,6 +351,7 @@ function handleAddChild(parentData) {
     plateType: 'INDUSTRY',
     parentId: parentData.id,
     sortOrder: 0,
+    focusFlag: 0,
     remark: undefined
   }
   plateDialogTitle.value = '新增子级板块'
@@ -343,6 +365,7 @@ function handleEditPlate(data) {
     plateType: data.plateType,
     parentId: data.parentId,
     sortOrder: data.sortOrder,
+    focusFlag: data.focusFlag,
     remark: data.remark
   }
   plateDialogTitle.value = '编辑板块'

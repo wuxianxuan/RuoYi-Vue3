@@ -51,6 +51,14 @@ export function listIndustryTree() {
   })
 }
 
+// 查询概念板块列表（不分页）
+export function listConceptList() {
+  return request({
+    url: '/stock/plate/concept/list',
+    method: 'get'
+  })
+}
+
 // 获取板块下的股票列表（分页）
 export function getPlateStocks(query) {
   return request({

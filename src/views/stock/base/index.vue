@@ -22,24 +22,26 @@
           <el-option v-for="m in marketOptions" :key="m.value" :label="m.label" :value="m.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="行业" prop="industryId">
+      <el-form-item label="行业" prop="industryIds">
           <el-tree-select
-            v-model="queryParams.industryId"
+            v-model="queryParams.industryIds"
             :data="industryTreeData"
             :props="{ label: 'plateName', value: 'id', children: 'children' }"
             placeholder="请选择行业"
             clearable
+            multiple
             check-strictly
             :render-after-expand="false"
+            style="width: 200px"
           />
         </el-form-item>
         <el-form-item label="概念" prop="conceptIds">
-          <el-select v-model="queryParams.conceptIds" multiple placeholder="请选择概念" clearable>
+          <el-select v-model="queryParams.conceptIds" multiple placeholder="请选择概念" clearable style="width: 200px">
             <el-option v-for="c in conceptOptions" :key="c.id" :label="c.plateName" :value="c.id" />
           </el-select>
         </el-form-item>
-      <el-form-item label="所属分组" prop="groupId">
-          <el-select v-model="queryParams.groupId" placeholder="请选择分组" clearable>
+      <el-form-item label="所属分组" prop="groupIds">
+          <el-select v-model="queryParams.groupIds" multiple placeholder="请选择分组" clearable style="width: 200px">
             <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
           </el-select>
         </el-form-item>
@@ -64,6 +66,9 @@
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="Download" @click="handleExport">导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button type="warning" plain icon="Document" @click="handleExportTxt">导出TXT</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -263,9 +268,9 @@ const data = reactive({
     stockCode: undefined,
     stockName: undefined,
     market: undefined,
-    industryId: undefined,
+    industryIds: [],
     conceptIds: [],
-    groupId: undefined,
+    groupIds: [],
   },
   rules: {
     stockCode: [
@@ -473,6 +478,13 @@ function handleExport() {
   proxy.download('stock/base/export', {
     ...queryParams.value
   }, `stock_${new Date().getTime()}.xlsx`)
+}
+
+/** 导出股票代码TXT */
+function handleExportTxt() {
+  proxy.download('stock/base/exportTxt', {
+    ...queryParams.value
+  }, `stock_codes_${new Date().getTime()}.txt`)
 }
 
 loadGroups()

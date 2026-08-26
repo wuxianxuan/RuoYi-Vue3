@@ -45,6 +45,9 @@
             <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
           </el-select>
         </el-form-item>
+      <el-form-item label="涨停数" prop="minLimitUpCount">
+          <el-input-number v-model="queryParams.minLimitUpCount" :min="0" :controls="false" placeholder="涨停数下限" style="width: 150px" />
+        </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -111,6 +114,11 @@
       <el-table-column label="量比" align="center" prop="volumeRatio" width="80">
         <template #default="scope">
           {{ scope.row.volumeRatio != null ? scope.row.volumeRatio : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="涨停数" align="center" prop="limitUpCount" width="80">
+        <template #default="scope">
+          {{ scope.row.limitUpCount != null ? scope.row.limitUpCount : 0 }}
         </template>
       </el-table-column>
 <el-table-column label="概念" align="center" :show-overflow-tooltip="true" min-width="150">
@@ -271,6 +279,7 @@ const data = reactive({
     industryIds: [],
     conceptIds: [],
     groupIds: [],
+    minLimitUpCount: undefined,
   },
   rules: {
     stockCode: [

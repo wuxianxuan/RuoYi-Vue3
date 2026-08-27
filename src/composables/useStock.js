@@ -8,7 +8,7 @@
  * - MARKET_OPTIONS: 市场选项
  */
 import { ref } from 'vue'
-import { listIndustryTree, listPlate } from '@/api/stock/plate'
+import { listIndustryTree, listConceptList } from '@/api/stock/plate'
 import { useRouter } from 'vue-router'
 import { MARKET_OPTIONS } from '@/utils/stock/constants'
 
@@ -26,8 +26,8 @@ export function useStock() {
 
   /** 加载概念列表 */
   function loadConcepts() {
-    listPlate({ plateType: 'concept' }).then(response => {
-      conceptOptions.value = response.rows || response.data || []
+    listConceptList().then(response => {
+      conceptOptions.value = response.data || []
     })
   }
 

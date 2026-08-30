@@ -15,9 +15,6 @@
               </template>
               <el-table
                 :data="industryTreeData"
-                row-key="id"
-                :tree-props="{ children: 'children' }"
-                default-expand-all
                 highlight-current-row
                 @row-click="handleIndustryNodeClick"
                 max-height="500"
@@ -29,11 +26,10 @@
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="110" align="center">
+                <el-table-column label="操作" width="100" align="center">
                   <template #default="scope">
-                    <el-button link type="primary" size="small" icon="Plus" @click.stop="handleAddChild(scope.row)" title="新增子级" />
                     <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" title="编辑" />
-                    <el-button link type="danger" size="small" icon="Delete" @click.stop="handleDeletePlate(scope.row)" :disabled="scope.row.children && scope.row.children.length > 0" title="删除" />
+                    <el-button link type="danger" size="small" icon="Delete" @click.stop="handleDeletePlate(scope.row)" title="删除" />
                   </template>
                 </el-table-column>
               </el-table>
@@ -49,7 +45,7 @@
               <el-descriptions :column="2" border size="small">
                 <el-descriptions-item label="板块名称">{{ currentPlate.plateName }}</el-descriptions-item>
                 <el-descriptions-item label="板块类型">行业板块</el-descriptions-item>
-                <el-descriptions-item label="层级">{{ currentPlate.level }}</el-descriptions-item>
+                <el-descriptions-item label="同花顺代码">{{ currentPlate.plateCode || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="排序">{{ currentPlate.sortOrder }}</el-descriptions-item>
                 <el-descriptions-item label="重点关注">
                   <el-tag :type="currentPlate.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ currentPlate.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
@@ -132,6 +128,7 @@
               <el-descriptions :column="2" border size="small">
                 <el-descriptions-item label="板块名称">{{ currentPlate.plateName }}</el-descriptions-item>
                 <el-descriptions-item label="板块类型">概念板块</el-descriptions-item>
+                <el-descriptions-item label="同花顺代码">{{ currentPlate.plateCode || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="排序">{{ currentPlate.sortOrder }}</el-descriptions-item>
                 <el-descriptions-item label="重点关注">
                   <el-tag :type="currentPlate.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ currentPlate.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
@@ -177,16 +174,8 @@
         <el-form-item label="板块名称" prop="plateName">
           <el-input v-model="plateForm.plateName" placeholder="请输入板块名称" />
         </el-form-item>
-        <el-form-item label="父级板块" prop="parentId" v-if="plateForm.plateType === 'INDUSTRY'">
-          <el-tree-select
-            v-model="plateForm.parentId"
-            :data="industryTreeData"
-            :props="{ label: 'plateName', value: 'id', children: 'children' }"
-            placeholder="无（顶级板块）"
-            clearable
-            check-strictly
-            style="width: 100%"
-          />
+        <el-form-item label="同花顺代码" prop="plateCode">
+          <el-input v-model="plateForm.plateCode" placeholder="请输入同花顺板块代码" />
         </el-form-item>
         <el-form-item label="排序" prop="sortOrder">
           <el-input-number v-model="plateForm.sortOrder" :min="0" controls-position="right" />
@@ -241,8 +230,7 @@
 </template>
 
 <script setup name="StockPlate">
-import { getPlate, addPlate, updatePlate, delPlate, listIndustryTree, listConceptList, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes } from "@/api/stock/plate"
-import { handleTree } from '@/utils/ruoyi'
+import { addPlate, updatePlate, delPlate, listIndustryTree, listConceptList, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes } from "@/api/stock/plate"
 
 const { proxy } = getCurrentInstance()
 
@@ -258,7 +246,7 @@ const plateStockTotal = ref(0)
 const plateStockQuery = reactive({
   pageNum: 1,
   pageSize: 10,
-  plateId: null
+  plateCode: null
 })
 
 // 板块新增/编辑对话框
@@ -279,8 +267,7 @@ const parsedResult = ref(null)
 
 function loadIndustryTree() {
   listIndustryTree().then(response => {
-    const list = response.data || []
-    industryTreeData.value = handleTree(list, 'id', 'parentId', 'children')
+    industryTreeData.value = response.data || []
   })
 }
 
@@ -293,7 +280,7 @@ function loadConceptList() {
 function loadPlateStocks() {
   if (!currentPlate.value) return
   plateStockLoading.value = true
-  plateStockQuery.plateId = currentPlate.value.id
+  plateStockQuery.plateCode = currentPlate.value.plateCode
   getPlateStocks(plateStockQuery).then(response => {
     plateStockList.value = response.rows || []
     plateStockTotal.value = response.total || 0
@@ -335,7 +322,7 @@ function handleAddPlate(plateType) {
     id: undefined,
     plateName: undefined,
     plateType: plateType,
-    parentId: plateType === 'CONCEPT' ? 0 : undefined,
+    plateCode: undefined,
     sortOrder: 0,
     focusFlag: 0,
     remark: undefined
@@ -344,26 +331,12 @@ function handleAddPlate(plateType) {
   plateDialogOpen.value = true
 }
 
-function handleAddChild(parentData) {
-  plateForm.value = {
-    id: undefined,
-    plateName: undefined,
-    plateType: 'INDUSTRY',
-    parentId: parentData.id,
-    sortOrder: 0,
-    focusFlag: 0,
-    remark: undefined
-  }
-  plateDialogTitle.value = '新增子级板块'
-  plateDialogOpen.value = true
-}
-
 function handleEditPlate(data) {
   plateForm.value = {
     id: data.id,
     plateName: data.plateName,
     plateType: data.plateType,
-    parentId: data.parentId,
+    plateCode: data.plateCode,
     sortOrder: data.sortOrder,
     focusFlag: data.focusFlag,
     remark: data.remark
@@ -426,8 +399,8 @@ function handleParseCodes() {
 
 function submitBatchAdd() {
   if (!parsedResult.value || parsedResult.value.matched.length === 0) return
-  const stockIds = parsedResult.value.matched.map(s => s.id)
-  addPlateStocks(currentPlate.value.id, stockIds).then(() => {
+  const stockCodes = parsedResult.value.matched.map(s => s.stockCode)
+  addPlateStocks(currentPlate.value.plateCode, stockCodes).then(() => {
     proxy.$modal.msgSuccess("添加成功")
     batchAddOpen.value = false
     loadPlateStocks()
@@ -436,7 +409,7 @@ function submitBatchAdd() {
 
 function handleRemovePlateStock(row) {
   proxy.$modal.confirm('是否确认将股票"' + row.stockName + '(' + row.stockCode + ')"从该板块中移除？').then(function() {
-    return delPlateStocks(currentPlate.value.id, [row.id])
+    return delPlateStocks(currentPlate.value.plateCode, [row.stockCode])
   }).then(() => {
     proxy.$modal.msgSuccess("移除成功")
     loadPlateStocks()

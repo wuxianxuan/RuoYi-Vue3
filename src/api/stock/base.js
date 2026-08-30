@@ -44,17 +44,17 @@ export function delStock(id) {
 }
 
 // 获取股票所属分组
-export function getStockGroups(id) {
+export function getStockGroups(stockCode) {
   return request({
-    url: '/stock/base/' + id + '/groups',
+    url: '/stock/base/' + stockCode + '/groups',
     method: 'get'
   })
 }
 
 // 关联股票到分组
-export function bindStockGroups(id, groupIds) {
+export function bindStockGroups(stockCode, groupIds) {
   return request({
-    url: '/stock/base/' + id + '/groups',
+    url: '/stock/base/' + stockCode + '/groups',
     method: 'post',
     data: groupIds
   })

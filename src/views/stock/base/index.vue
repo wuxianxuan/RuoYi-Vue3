@@ -82,12 +82,31 @@
       <el-table-column label="股票名称" align="center" prop="stockName" />
       <el-table-column label="市场" align="center" prop="market" />
       <el-table-column label="行业" align="center" prop="industryName" :show-overflow-tooltip="true" />
+      <el-table-column label="概念" align="center" :show-overflow-tooltip="true" min-width="150">
+        <template #default="scope">
+          <template v-if="scope.row.conceptNames && scope.row.conceptNames.length">
+            <span v-if="scope.row.conceptNames.length <= 2">
+              {{ scope.row.conceptNames.join('、') }}
+            </span>
+            <el-tooltip v-else :content="scope.row.conceptNames.join('、')" placement="top">
+              <span>{{ scope.row.conceptNames.slice(0, 2).join('、') }} ...</span>
+            </el-tooltip>
+          </template>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="所属分组" align="center" :show-overflow-tooltip="true" min-width="120">
+        <template #default="scope">
+          <span v-if="scope.row.groupNames && scope.row.groupNames.length">{{ scope.row.groupNames.join('、') }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="现价" align="center" prop="currentPrice" width="90">
         <template #default="scope">
           {{ scope.row.currentPrice != null ? scope.row.currentPrice : '-' }}
         </template>
       </el-table-column>
-      <el-table-column label="涨跌幅" align="center" prop="changeRate" width="90">
+      <el-table-column label="涨跌幅(%)" align="center" prop="changeRate" width="100">
         <template #default="scope">
           <span v-if="scope.row.changeRate != null"
                 :style="{ color: scope.row.changeRate > 0 ? '#e4393c' : scope.row.changeRate < 0 ? '#1ca01c' : '' }">
@@ -96,17 +115,25 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="市盈率(PE)" align="center" prop="peRatio" width="110">
+      <el-table-column label="涨跌" align="center" prop="priceChange" width="90">
         <template #default="scope">
-          {{ scope.row.peRatio != null ? scope.row.peRatio : '-' }}
+          <span v-if="scope.row.priceChange != null"
+                :style="{ color: scope.row.priceChange > 0 ? '#e4393c' : scope.row.priceChange < 0 ? '#1ca01c' : '' }">
+            {{ scope.row.priceChange > 0 ? '+' : '' }}{{ scope.row.priceChange }}
+          </span>
+          <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="总市值" align="center" prop="totalMarketCap" width="130">
+      <el-table-column label="涨速(%)" align="center" prop="speed" width="90">
         <template #default="scope">
-          {{ scope.row.totalMarketCap != null ? (scope.row.totalMarketCap / 100000000).toFixed(2) + '亿' : '-' }}
+          <span v-if="scope.row.speed != null"
+                :style="{ color: scope.row.speed > 0 ? '#e4393c' : scope.row.speed < 0 ? '#1ca01c' : '' }">
+            {{ scope.row.speed > 0 ? '+' : '' }}{{ scope.row.speed }}%
+          </span>
+          <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="换手率" align="center" prop="turnoverRate" width="90">
+      <el-table-column label="换手(%)" align="center" prop="turnoverRate" width="90">
         <template #default="scope">
           {{ scope.row.turnoverRate != null ? scope.row.turnoverRate + '%' : '-' }}
         </template>
@@ -116,27 +143,29 @@
           {{ scope.row.volumeRatio != null ? scope.row.volumeRatio : '-' }}
         </template>
       </el-table-column>
-      <el-table-column label="涨停数" align="center" prop="limitUpCount" width="80">
+      <el-table-column label="振幅(%)" align="center" prop="amplitude" width="90">
         <template #default="scope">
-          {{ scope.row.limitUpCount != null ? scope.row.limitUpCount : 0 }}
+          {{ scope.row.amplitude != null ? scope.row.amplitude + '%' : '-' }}
         </template>
       </el-table-column>
-<el-table-column label="概念" align="center" :show-overflow-tooltip="true" min-width="150">
-          <template #default="scope">
-            <template v-if="scope.row.conceptNames && scope.row.conceptNames.length">
-              <span v-if="scope.row.conceptNames.length <= 2">
-                {{ scope.row.conceptNames.join('、') }}
-              </span>
-              <el-tooltip v-else :content="scope.row.conceptNames.join('、')" placement="top">
-                <span>{{ scope.row.conceptNames.slice(0, 2).join('、') }} ...</span>
-              </el-tooltip>
-            </template>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-      <el-table-column label="所属分组" align="center" prop="groupNames" :show-overflow-tooltip="true">
+      <el-table-column label="成交额" align="center" prop="turnoverAmount" width="100">
         <template #default="scope">
-          <el-tag v-for="g in scope.row.groupIds" :key="g" size="small" style="margin: 2px">{{ getGroupName(g) }}</el-tag>
+          {{ scope.row.turnoverAmount != null ? (scope.row.turnoverAmount / 100000000).toFixed(2) + '亿' : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="流通股" align="center" prop="circulatingShares" width="100">
+        <template #default="scope">
+          {{ scope.row.circulatingShares != null ? (scope.row.circulatingShares / 100000000).toFixed(2) + '亿' : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="流通市值" align="center" prop="circMarketCap" width="110">
+        <template #default="scope">
+          {{ scope.row.circMarketCap != null ? (scope.row.circMarketCap / 100000000).toFixed(2) + '亿' : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="市盈率" align="center" prop="peRatio" width="100">
+        <template #default="scope">
+          {{ scope.row.peRatio != null ? scope.row.peRatio : '-' }}
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
@@ -261,6 +290,7 @@ const groupOpen = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
 const ids = ref([])
+const selectedStockCodes = ref([])
 const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
@@ -296,12 +326,6 @@ const data = reactive({
 
 const { queryParams, form, rules, groupForm } = toRefs(data)
 
-/** 根据分组ID获取分组名称 */
-function getGroupName(groupId) {
-  const g = groupOptions.value.find(item => item.id === groupId)
-  return g ? g.groupName : ''
-}
-
 /** 加载所有分组 */
 function loadGroups() {
   listGroupAll().then(response => {
@@ -315,12 +339,6 @@ function getList() {
   listStock(queryParams.value).then(response => {
     stockList.value = response.rows
     total.value = response.total
-    // 加载每支股票的分组
-    stockList.value.forEach(stock => {
-      getStockGroups(stock.id).then(res => {
-        stock.groupIds = res.data || []
-      })
-    })
   }).finally(() => {
     loading.value = false
   })
@@ -380,6 +398,7 @@ function resetQuery() {
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
   ids.value = selection.map(item => item.id)
+  selectedStockCodes.value = selection.map(item => item.stockCode)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -398,7 +417,7 @@ function handleUpdate(row) {
   getStock(_id).then(response => {
     form.value = response.data
     // 加载股票当前分组
-    getStockGroups(_id).then(res => {
+    getStockGroups(form.value.stockCode).then(res => {
       form.value.groupIds = res.data || []
     })
     open.value = true
@@ -415,18 +434,17 @@ function submitForm() {
       if (form.value.id != null) {
         updateStock(form.value).then(() => {
           // 更新分组关联
-          bindStockGroups(form.value.id, groupIds).then(() => {
+          bindStockGroups(form.value.stockCode, groupIds).then(() => {
             proxy.$modal.msgSuccess("修改成功")
             open.value = false
             getList()
           })
         })
       } else {
-        addStock(form.value).then(response => {
+        addStock(form.value).then(() => {
           // 新增后关联分组
-          const newId = response.data || form.value.id
-          if (newId && groupIds.length > 0) {
-            bindStockGroups(newId, groupIds).then(() => {
+          if (form.value.stockCode && groupIds.length > 0) {
+            bindStockGroups(form.value.stockCode, groupIds).then(() => {
               proxy.$modal.msgSuccess("新增成功")
               open.value = false
               getList()
@@ -466,13 +484,13 @@ function submitGroupAssign() {
     return
   }
   // 逐个将选中的股票关联到分组
-  const promises = ids.value.map(stockId =>
-    getStockGroups(stockId).then(res => {
+  const promises = selectedStockCodes.value.map(stockCode =>
+    getStockGroups(stockCode).then(res => {
       const existing = res.data || []
       if (!existing.includes(groupForm.value.groupId)) {
         existing.push(groupForm.value.groupId)
       }
-      return bindStockGroups(stockId, existing)
+      return bindStockGroups(stockCode, existing)
     })
   )
   Promise.all(promises).then(() => {

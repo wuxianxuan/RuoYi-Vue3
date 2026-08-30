@@ -62,27 +62,27 @@ export function listConceptList() {
 // 获取板块下的股票列表（分页）
 export function getPlateStocks(query) {
   return request({
-    url: '/stock/plate/' + query.plateId + '/stocks',
+    url: '/stock/plate/' + query.plateCode + '/stocks',
     method: 'get',
     params: query
   })
 }
 
 // 批量添加股票到板块
-export function addPlateStocks(plateId, stockIds) {
+export function addPlateStocks(plateCode, stockCodes) {
   return request({
-    url: '/stock/plate/' + plateId + '/stocks',
+    url: '/stock/plate/' + plateCode + '/stocks',
     method: 'post',
-    data: stockIds
+    data: stockCodes
   })
 }
 
 // 从板块移除股票
-export function delPlateStocks(plateId, stockIds) {
+export function delPlateStocks(plateCode, stockCodes) {
   return request({
-    url: '/stock/plate/' + plateId + '/stocks',
+    url: '/stock/plate/' + plateCode + '/stocks',
     method: 'delete',
-    data: stockIds
+    data: stockCodes
   })
 }
 

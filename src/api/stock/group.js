@@ -62,20 +62,20 @@ export function getGroupStocks(query) {
 }
 
 // 批量添加股票到分组
-export function addGroupStocks(groupId, stockIds) {
+export function addGroupStocks(groupId, stockCodes) {
   return request({
     url: '/stock/group/' + groupId + '/stocks',
     method: 'post',
-    data: stockIds
+    data: stockCodes
   })
 }
 
 // 从分组移除股票
-export function delGroupStocks(groupId, stockIds) {
+export function delGroupStocks(groupId, stockCodes) {
   return request({
     url: '/stock/group/' + groupId + '/stocks',
     method: 'delete',
-    data: stockIds
+    data: stockCodes
   })
 }
 

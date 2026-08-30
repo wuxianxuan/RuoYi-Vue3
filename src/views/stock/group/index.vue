@@ -365,7 +365,7 @@ function resetAddStockQuery() {
 
 /** 新增股票选中 */
 function handleAddStockSelect(selection) {
-  addSelectedIds.value = selection.map(item => item.id)
+  addSelectedIds.value = selection.map(item => item.stockCode)
 }
 
 /** 提交新增 */
@@ -411,7 +411,7 @@ function handleGoKline(row) {
 /** 移除股票 */
 function handleRemoveStock(row) {
   proxy.$modal.confirm('是否确认将股票"' + row.stockName + '(' + row.stockCode + ')' + '"从该分组中移除？').then(function() {
-    return delGroupStocks(currentGroupId.value, [row.id])
+    return delGroupStocks(currentGroupId.value, [row.stockCode])
   }).then(() => {
     proxy.$modal.msgSuccess("移除成功")
     loadDetailStocks()

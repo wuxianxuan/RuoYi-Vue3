@@ -48,6 +48,31 @@
       <el-form-item label="涨停数" prop="minLimitUpCount">
           <el-input-number v-model="queryParams.minLimitUpCount" :min="0" :controls="false" placeholder="涨停数下限" style="width: 150px" />
         </el-form-item>
+      <el-form-item label="现价" prop="minCurrentPrice">
+          <el-input-number v-model="queryParams.minCurrentPrice" :controls="false" placeholder="最低" style="width: 90px" />
+          <span style="margin: 0 4px">~</span>
+          <el-input-number v-model="queryParams.maxCurrentPrice" :controls="false" placeholder="最高" style="width: 90px" />
+        </el-form-item>
+      <el-form-item label="涨跌幅" prop="minChangeRate">
+          <el-input-number v-model="queryParams.minChangeRate" :controls="false" placeholder="最低%" style="width: 90px" />
+          <span style="margin: 0 4px">~</span>
+          <el-input-number v-model="queryParams.maxChangeRate" :controls="false" placeholder="最高%" style="width: 90px" />
+        </el-form-item>
+      <el-form-item label="换手" prop="minTurnoverRate">
+          <el-input-number v-model="queryParams.minTurnoverRate" :controls="false" placeholder="最低%" style="width: 90px" />
+          <span style="margin: 0 4px">~</span>
+          <el-input-number v-model="queryParams.maxTurnoverRate" :controls="false" placeholder="最高%" style="width: 90px" />
+        </el-form-item>
+      <el-form-item label="量比" prop="minVolumeRatio">
+          <el-input-number v-model="queryParams.minVolumeRatio" :controls="false" placeholder="最低" style="width: 90px" />
+          <span style="margin: 0 4px">~</span>
+          <el-input-number v-model="queryParams.maxVolumeRatio" :controls="false" placeholder="最高" style="width: 90px" />
+        </el-form-item>
+      <el-form-item label="成交额" prop="minTurnoverAmount">
+          <el-input-number v-model="queryParams.minTurnoverAmount" :controls="false" placeholder="最低(元)" style="width: 110px" />
+          <span style="margin: 0 4px">~</span>
+          <el-input-number v-model="queryParams.maxTurnoverAmount" :controls="false" placeholder="最高(元)" style="width: 110px" />
+        </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -99,6 +124,11 @@
         <template #default="scope">
           <span v-if="scope.row.groupNames && scope.row.groupNames.length">{{ scope.row.groupNames.join('、') }}</span>
           <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="涨停数" align="center" prop="limitUpCount" width="80">
+        <template #default="scope">
+          {{ scope.row.limitUpCount != null ? scope.row.limitUpCount : '-' }}
         </template>
       </el-table-column>
       <el-table-column label="现价" align="center" prop="currentPrice" width="90">
@@ -310,6 +340,16 @@ const data = reactive({
     conceptIds: [],
     groupIds: [],
     minLimitUpCount: undefined,
+    minCurrentPrice: undefined,
+    maxCurrentPrice: undefined,
+    minChangeRate: undefined,
+    maxChangeRate: undefined,
+    minTurnoverRate: undefined,
+    maxTurnoverRate: undefined,
+    minVolumeRatio: undefined,
+    maxVolumeRatio: undefined,
+    minTurnoverAmount: undefined,
+    maxTurnoverAmount: undefined,
   },
   rules: {
     stockCode: [

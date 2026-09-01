@@ -31,17 +31,18 @@
             clearable
             multiple
             check-strictly
+            filterable
             :render-after-expand="false"
             style="width: 200px"
           />
         </el-form-item>
         <el-form-item label="概念" prop="conceptIds">
-          <el-select v-model="queryParams.conceptIds" multiple placeholder="请选择概念" clearable style="width: 200px">
+          <el-select v-model="queryParams.conceptIds" multiple filterable placeholder="请选择概念" clearable style="width: 200px">
             <el-option v-for="c in conceptOptions" :key="c.id" :label="c.plateName" :value="c.id" />
           </el-select>
         </el-form-item>
       <el-form-item label="所属分组" prop="groupIds">
-          <el-select v-model="queryParams.groupIds" multiple placeholder="请选择分组" clearable style="width: 200px">
+          <el-select v-model="queryParams.groupIds" multiple filterable placeholder="请选择分组" clearable style="width: 200px">
             <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
           </el-select>
         </el-form-item>

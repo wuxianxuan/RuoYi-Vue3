@@ -52,6 +52,7 @@
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
                   </template>
                 </el-table-column>
+                <el-table-column label="备注" prop="remark" min-width="150" :show-overflow-tooltip="true" />
                 <el-table-column label="操作" width="100" align="center">
                   <template #default="scope">
                     <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" title="编辑" />
@@ -149,6 +150,7 @@
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
                   </template>
                 </el-table-column>
+                <el-table-column label="备注" prop="remark" min-width="150" :show-overflow-tooltip="true" />
                 <el-table-column label="操作" width="100" align="center">
                   <template #default="scope">
                     <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" />

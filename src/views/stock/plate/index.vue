@@ -1,5 +1,24 @@
 <template>
   <div class="app-container">
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="68px">
+      <el-form-item label="行业名称" prop="plateName">
+        <el-input v-model="queryParams.plateName" placeholder="请输入名称" clearable @keyup.enter="handleQuery" />
+      </el-form-item>
+      <el-form-item label="行业代码" prop="plateCode">
+        <el-input v-model="queryParams.plateCode" placeholder="请输入代码" clearable @keyup.enter="handleQuery" />
+      </el-form-item>
+      <el-form-item label="重点关注" prop="focusFlag">
+        <el-select v-model="queryParams.focusFlag" placeholder="请选择" clearable style="width: 120px">
+          <el-option label="需要" :value="1" />
+          <el-option label="不需要" :value="0" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+      </el-form-item>
+    </el-form>
+
     <el-tabs v-model="activeTab" @tab-click="handleTabClick">
       <!-- ==================== 行业板块 Tab ==================== -->
       <el-tab-pane label="行业板块" name="industry">
@@ -10,17 +29,24 @@
               <template #header>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span>行业板块</span>
-                  <el-button type="primary" size="small" icon="Plus" @click="handleAddPlate('INDUSTRY')">新增</el-button>
+                  <div>
+                    <el-button type="success" size="small" icon="Check" @click="handleBatchFocus('INDUSTRY', 1)">批量设为关注</el-button>
+                    <el-button type="warning" size="small" icon="Close" @click="handleBatchFocus('INDUSTRY', 0)">批量取消关注</el-button>
+                    <el-button type="primary" size="small" icon="Plus" @click="handleAddPlate('INDUSTRY')">新增</el-button>
+                  </div>
                 </div>
               </template>
               <el-table
                 :data="industryTreeData"
                 highlight-current-row
                 @row-click="handleIndustryNodeClick"
+                @selection-change="handleIndustrySelectionChange"
                 max-height="500"
                 size="small"
               >
+                <el-table-column type="selection" width="45" align="center" />
                 <el-table-column label="行业名称" prop="plateName" :show-overflow-tooltip="true" />
+                <el-table-column label="行业代码" prop="plateCode" width="100" align="center" :show-overflow-tooltip="true" />
                 <el-table-column label="重点关注" width="110" align="center">
                   <template #default="scope">
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
@@ -33,6 +59,13 @@
                   </template>
                 </el-table-column>
               </el-table>
+              <pagination
+                v-show="industryTotal > 0"
+                :total="industryTotal"
+                v-model:page="industryQuery.pageNum"
+                v-model:limit="industryQuery.pageSize"
+                @pagination="loadIndustryList"
+              />
             </el-card>
           </el-col>
 
@@ -93,17 +126,24 @@
               <template #header>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span>概念板块</span>
-                  <el-button type="primary" size="small" icon="Plus" @click="handleAddPlate('CONCEPT')">新增</el-button>
+                  <div>
+                    <el-button type="success" size="small" icon="Check" @click="handleBatchFocus('CONCEPT', 1)">批量设为关注</el-button>
+                    <el-button type="warning" size="small" icon="Close" @click="handleBatchFocus('CONCEPT', 0)">批量取消关注</el-button>
+                    <el-button type="primary" size="small" icon="Plus" @click="handleAddPlate('CONCEPT')">新增</el-button>
+                  </div>
                 </div>
               </template>
               <el-table
                 :data="conceptList"
                 highlight-current-row
                 @current-change="handleConceptRowClick"
+                @selection-change="handleConceptSelectionChange"
                 max-height="500"
                 size="small"
               >
+                <el-table-column type="selection" width="45" align="center" />
                 <el-table-column label="概念名称" prop="plateName" :show-overflow-tooltip="true" />
+                <el-table-column label="概念代码" prop="plateCode" width="100" align="center" :show-overflow-tooltip="true" />
                 <el-table-column label="重点关注" width="110" align="center">
                   <template #default="scope">
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
@@ -116,6 +156,13 @@
                   </template>
                 </el-table-column>
               </el-table>
+              <pagination
+                v-show="conceptTotal > 0"
+                :total="conceptTotal"
+                v-model:page="conceptQuery.pageNum"
+                v-model:limit="conceptQuery.pageSize"
+                @pagination="loadConceptList"
+              />
             </el-card>
           </el-col>
 
@@ -230,7 +277,7 @@
 </template>
 
 <script setup name="StockPlate">
-import { addPlate, updatePlate, delPlate, listIndustryTree, listConceptList, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes } from "@/api/stock/plate"
+import { addPlate, updatePlate, delPlate, listPlate, getPlateStocks, addPlateStocks, delPlateStocks, parseStockCodes, updatePlateFocus } from "@/api/stock/plate"
 
 const { proxy } = getCurrentInstance()
 
@@ -263,17 +310,36 @@ const batchAddText = ref('')
 const parseLoading = ref(false)
 const parsedResult = ref(null)
 
+// 批量重点关注选中行
+const selectedIndustryRows = ref([])
+const selectedConceptRows = ref([])
+
+// 查询条件
+const queryParams = reactive({
+  plateName: undefined,
+  plateCode: undefined,
+  focusFlag: undefined,
+})
+
+// 分页
+const industryQuery = reactive({ pageNum: 1, pageSize: 10 })
+const conceptQuery = reactive({ pageNum: 1, pageSize: 10 })
+const industryTotal = ref(0)
+const conceptTotal = ref(0)
+
 // ==================== 数据加载 ====================
 
-function loadIndustryTree() {
-  listIndustryTree().then(response => {
-    industryTreeData.value = response.data || []
+function loadIndustryList() {
+  listPlate({ ...queryParams, plateType: 'INDUSTRY', pageNum: industryQuery.pageNum, pageSize: industryQuery.pageSize }).then(response => {
+    industryTreeData.value = response.rows || []
+    industryTotal.value = response.total || 0
   })
 }
 
 function loadConceptList() {
-  listConceptList().then(response => {
-    conceptList.value = response.data || []
+  listPlate({ ...queryParams, plateType: 'CONCEPT', pageNum: conceptQuery.pageNum, pageSize: conceptQuery.pageSize }).then(response => {
+    conceptList.value = response.rows || []
+    conceptTotal.value = response.total || 0
   })
 }
 
@@ -295,6 +361,23 @@ function handleTabClick() {
   currentPlate.value = null
   plateStockList.value = []
   plateStockTotal.value = 0
+}
+
+// ==================== 查询过滤 ====================
+
+function handleQuery() {
+  industryQuery.pageNum = 1
+  conceptQuery.pageNum = 1
+  loadIndustryList()
+  loadConceptList()
+}
+
+function resetQuery() {
+  proxy.resetForm("queryRef")
+  industryQuery.pageNum = 1
+  conceptQuery.pageNum = 1
+  loadIndustryList()
+  loadConceptList()
 }
 
 // ==================== 行业树点击 ====================
@@ -416,10 +499,38 @@ function handleRemovePlateStock(row) {
   }).catch(() => {})
 }
 
+// ==================== 重点关注批量操作 ====================
+
+function handleIndustrySelectionChange(selection) {
+  selectedIndustryRows.value = selection
+}
+
+function handleConceptSelectionChange(selection) {
+  selectedConceptRows.value = selection
+}
+
+function handleBatchFocus(plateType, focusFlag) {
+  const selected = plateType === 'INDUSTRY' ? selectedIndustryRows.value : selectedConceptRows.value
+  if (!selected || selected.length === 0) {
+    proxy.$modal.msgWarning("请先勾选要操作的板块")
+    return
+  }
+  const ids = selected.map(r => r.id)
+  const actionText = focusFlag === 1 ? '设为关注' : '取消关注'
+  proxy.$modal.confirm(`是否确认将选中的 ${selected.length} 个板块${actionText}？`).then(function() {
+    return updatePlateFocus(ids, focusFlag)
+  }).then(() => {
+    proxy.$modal.msgSuccess(`${actionText}成功`)
+    selectedIndustryRows.value = []
+    selectedConceptRows.value = []
+    refreshData()
+  }).catch(() => {})
+}
+
 // ==================== 刷新数据 ====================
 
 function refreshData() {
-  loadIndustryTree()
+  loadIndustryList()
   loadConceptList()
   if (currentPlate.value) {
     loadPlateStocks()
@@ -427,6 +538,6 @@ function refreshData() {
 }
 
 // 初始化
-loadIndustryTree()
+loadIndustryList()
 loadConceptList()
 </script>

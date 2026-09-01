@@ -94,3 +94,12 @@ export function parseStockCodes(text) {
     data: { text }
   })
 }
+
+// 批量修改重点关注标记
+export function updatePlateFocus(ids, focusFlag) {
+  return request({
+    url: '/stock/plate/focus',
+    method: 'put',
+    data: { ids, focusFlag }
+  })
+}

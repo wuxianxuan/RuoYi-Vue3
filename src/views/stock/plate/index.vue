@@ -24,7 +24,7 @@
       <el-tab-pane label="行业板块" name="industry">
         <el-row :gutter="20">
           <!-- 左侧：行业树 -->
-          <el-col :span="8">
+          <el-col :span="10">
             <el-card shadow="never">
               <template #header>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -52,7 +52,7 @@
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="备注" prop="remark" min-width="150" :show-overflow-tooltip="true" />
+                <el-table-column label="备注" prop="remark" min-width="120" :show-overflow-tooltip="true" />
                 <el-table-column label="操作" width="100" align="center">
                   <template #default="scope">
                     <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" title="编辑" />
@@ -71,7 +71,7 @@
           </el-col>
 
           <!-- 右侧：板块详情 + 关联股票 -->
-          <el-col :span="16">
+          <el-col :span="14">
             <el-card shadow="never" v-if="currentPlate">
               <template #header>
                 <span>{{ currentPlate.plateName }} - 详情</span>
@@ -122,7 +122,7 @@
       <el-tab-pane label="概念板块" name="concept">
         <el-row :gutter="20">
           <!-- 左侧：概念列表 -->
-          <el-col :span="8">
+          <el-col :span="10">
             <el-card shadow="never">
               <template #header>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -150,7 +150,7 @@
                     <el-tag :type="scope.row.focusFlag === 1 ? 'warning' : 'info'" size="small">{{ scope.row.focusFlag === 1 ? '需要' : '不需要' }}</el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="备注" prop="remark" min-width="150" :show-overflow-tooltip="true" />
+                <el-table-column label="备注" prop="remark" min-width="120" :show-overflow-tooltip="true" />
                 <el-table-column label="操作" width="100" align="center">
                   <template #default="scope">
                     <el-button link type="primary" size="small" icon="Edit" @click.stop="handleEditPlate(scope.row)" />
@@ -169,7 +169,7 @@
           </el-col>
 
           <!-- 右侧：板块详情 + 关联股票 -->
-          <el-col :span="16">
+          <el-col :span="14">
             <el-card shadow="never" v-if="currentPlate && currentPlate.plateType === 'CONCEPT'">
               <template #header>
                 <span>{{ currentPlate.plateName }} - 详情</span>

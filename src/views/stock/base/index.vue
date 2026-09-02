@@ -49,6 +49,11 @@
       <el-form-item label="涨停数" prop="minLimitUpCount">
           <el-input-number v-model="queryParams.minLimitUpCount" :min="0" :controls="false" placeholder="涨停数下限" style="width: 150px" />
         </el-form-item>
+      <el-form-item label="最近涨停" prop="limitUpLatest">
+          <el-select v-model="queryParams.limitUpLatest" placeholder="请选择" clearable style="width: 150px">
+            <el-option label="最近一天涨停" :value="1" />
+          </el-select>
+        </el-form-item>
       <el-form-item label="现价" prop="minCurrentPrice">
           <el-input-number v-model="queryParams.minCurrentPrice" :controls="false" placeholder="最低" style="width: 90px" />
           <span style="margin: 0 4px">~</span>
@@ -130,6 +135,12 @@
       <el-table-column label="涨停数" align="center" prop="limitUpCount" width="80">
         <template #default="scope">
           {{ scope.row.limitUpCount != null ? scope.row.limitUpCount : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="是否涨停" align="center" prop="lastLimitUpDate" width="110">
+        <template #default="scope">
+          <span v-if="scope.row.lastLimitUpDate" style="color: #e4393c">{{ scope.row.lastLimitUpDate.substring(0, 10) }}</span>
+          <span v-else>-</span>
         </template>
       </el-table-column>
       <el-table-column label="现价" align="center" prop="currentPrice" width="90">
@@ -341,6 +352,7 @@ const data = reactive({
     conceptIds: [],
     groupIds: [],
     minLimitUpCount: undefined,
+    limitUpLatest: undefined,
     minCurrentPrice: undefined,
     maxCurrentPrice: undefined,
     minChangeRate: undefined,

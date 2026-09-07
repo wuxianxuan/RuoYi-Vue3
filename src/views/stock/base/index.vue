@@ -49,10 +49,17 @@
       <el-form-item label="涨停数" prop="minLimitUpCount">
           <el-input-number v-model="queryParams.minLimitUpCount" :min="0" :controls="false" placeholder="涨停数下限" style="width: 150px" />
         </el-form-item>
-      <el-form-item label="最近涨停" prop="limitUpLatest">
-          <el-select v-model="queryParams.limitUpLatest" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="最近一天涨停" :value="1" />
-          </el-select>
+      <el-form-item label="涨停日期" prop="limitUpDateRange">
+          <el-date-picker
+            v-model="queryParams.limitUpDateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            clearable
+            style="width: 240px"
+          />
         </el-form-item>
       <el-form-item label="现价" prop="minCurrentPrice">
           <el-input-number v-model="queryParams.minCurrentPrice" :controls="false" placeholder="最低" style="width: 90px" />
@@ -137,7 +144,7 @@
           {{ scope.row.limitUpCount != null ? scope.row.limitUpCount : '-' }}
         </template>
       </el-table-column>
-      <el-table-column label="是否涨停" align="center" prop="lastLimitUpDate" width="110">
+      <el-table-column label="最新涨停日期" align="center" prop="lastLimitUpDate" width="110">
         <template #default="scope">
           <span v-if="scope.row.lastLimitUpDate" style="color: #e4393c">{{ scope.row.lastLimitUpDate.substring(0, 10) }}</span>
           <span v-else>-</span>
@@ -340,6 +347,14 @@ const title = ref("")
 const groupOptions = ref([])
 const marketOptions = MARKET_OPTIONS
 
+/** 格式化当天日期为 yyyy-MM-dd */
+function todayStr() {
+  const d = new Date()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
 const data = reactive({
   form: {},
   queryParams: {
@@ -352,7 +367,7 @@ const data = reactive({
     conceptIds: [],
     groupIds: [],
     minLimitUpCount: undefined,
-    limitUpLatest: undefined,
+    limitUpDateRange: [todayStr(), todayStr()],
     minCurrentPrice: undefined,
     maxCurrentPrice: undefined,
     minChangeRate: undefined,
@@ -386,10 +401,21 @@ function loadGroups() {
   })
 }
 
+/** 组装查询参数：日期范围 -> 起止日期 */
+function buildQueryParams() {
+  const params = { ...queryParams.value }
+  if (params.limitUpDateRange && params.limitUpDateRange.length === 2) {
+    params.limitUpDateStart = params.limitUpDateRange[0]
+    params.limitUpDateEnd = params.limitUpDateRange[1]
+  }
+  delete params.limitUpDateRange
+  return params
+}
+
 /** 查询股票基础列表 */
 function getList() {
   loading.value = true
-  listStock(queryParams.value).then(response => {
+  listStock(buildQueryParams()).then(response => {
     stockList.value = response.rows
     total.value = response.total
   }).finally(() => {
@@ -555,16 +581,12 @@ function submitGroupAssign() {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('stock/base/export', {
-    ...queryParams.value
-  }, `stock_${new Date().getTime()}.xlsx`)
+  proxy.download('stock/base/export', buildQueryParams(), `stock_${new Date().getTime()}.xlsx`)
 }
 
 /** 导出股票代码TXT */
 function handleExportTxt() {
-  proxy.download('stock/base/exportTxt', {
-    ...queryParams.value
-  }, `stock_codes_${new Date().getTime()}.txt`)
+  proxy.download('stock/base/exportTxt', buildQueryParams(), `stock_codes_${new Date().getTime()}.txt`)
 }
 
 loadGroups()

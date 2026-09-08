@@ -156,6 +156,12 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
+      <el-table-column label="最高连板日期" align="center" prop="maxLimitUpBoardDate" width="110">
+        <template #default="scope">
+          <span v-if="scope.row.maxLimitUpBoardDate" style="color: #e4393c">{{ scope.row.maxLimitUpBoardDate.substring(0, 10) }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="现价" align="center" prop="currentPrice" width="90">
         <template #default="scope">
           {{ scope.row.currentPrice != null ? scope.row.currentPrice : '-' }}

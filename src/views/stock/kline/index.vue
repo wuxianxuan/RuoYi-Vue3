@@ -33,7 +33,7 @@
 
     <div v-if="klineData.length > 0">
       <div ref="chart" style="width:100%;height:450px;margin-bottom:20px;"></div>
-      <el-table :data="klineData" border stripe max-height="400">
+      <el-table :data="tableData" border stripe max-height="400">
         <el-table-column label="时间" prop="tradeTime" width="160" align="center" />
         <el-table-column label="开盘" prop="openPrice" width="100" align="center" />
         <el-table-column label="收盘" prop="closePrice" width="100" align="center" />
@@ -54,10 +54,10 @@ import { queryKline, autocompleteStock } from "@/api/stock/kline"
 export default {
   name: "StockKline",
   data() {
-    // 默认日期范围：当前往前60天
+    // 默认日期范围：最近3个月
     const today = new Date()
     const start = new Date()
-    start.setDate(start.getDate() - 60)
+    start.setMonth(start.getMonth() - 3)
     const fmt = d => {
       const y = d.getFullYear()
       const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -73,6 +73,12 @@ export default {
       klineData: [],
       chart: null,
       suggestTimer: null             // autocomplete 防抖计时器
+    }
+  },
+  computed: {
+    // 表格最新日期排第一行；K线图仍按时间升序渲染
+    tableData() {
+      return this.klineData.slice().reverse()
     }
   },
   mounted() {

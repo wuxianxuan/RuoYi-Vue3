@@ -46,6 +46,11 @@
             <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
           </el-select>
         </el-form-item>
+      <el-form-item label="排除分组" prop="excludeGroupIds">
+          <el-select v-model="queryParams.excludeGroupIds" multiple filterable placeholder="选分组1（排除）" clearable style="width: 200px">
+            <el-option v-for="g in groupOptions" :key="g.id" :label="g.groupName" :value="g.id" />
+          </el-select>
+        </el-form-item>
       <el-form-item label="涨停数" prop="minLimitUpCount">
           <el-input-number v-model="queryParams.minLimitUpCount" :min="0" :controls="false" placeholder="涨停数下限" style="width: 150px" />
         </el-form-item>
@@ -378,6 +383,7 @@ const data = reactive({
     industryIds: [],
     conceptIds: [],
     groupIds: [],
+    excludeGroupIds: [],
     minLimitUpCount: undefined,
     limitUpDateRange: [todayStr(), todayStr()],
     minCurrentPrice: undefined,

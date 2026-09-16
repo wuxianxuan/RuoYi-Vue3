@@ -16,6 +16,7 @@
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        <el-button type="warning" plain icon="Download" @click="handleExportFocusCodes">导出关注代码</el-button>
       </el-form-item>
     </el-form>
 
@@ -380,6 +381,11 @@ function resetQuery() {
   conceptQuery.pageNum = 1
   loadIndustryList()
   loadConceptList()
+}
+
+/** 导出重点关注板块代码（TXT，行业+概念） */
+function handleExportFocusCodes() {
+  proxy.download('stock/plate/exportFocusCodes', {}, `focus_plate_codes_${new Date().getTime()}.txt`)
 }
 
 // ==================== 行业树点击 ====================
